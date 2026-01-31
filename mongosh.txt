@@ -1,0 +1,86 @@
+// 1. Create explicit collection "books" with validation
+
+db.createCollection("books",{validator:{title:{$ne:null}}})
+
+// 2. Create implicit collection "authors"
+
+db.authors.insertOne({name:"Author 1",nationality:"British"})
+
+// 3. Create capped collection "logs" size 1MB
+
+db.createCollection( "logs", { capped: true, size: 1000000 } )
+
+// 4. Create index on books.title
+
+db.users.createIndex({ title: 1 });
+
+// 5. Insert one document into books
+
+db.books.insertOne({title:"Book 1",author:"Ali",year:1937,genres:["Fantasy","Adventure"]})
+
+// 6. Insert multiple documents into books
+
+db.books.insertMany([{title:"Future",author:"George Orwell",year:2020,genres:["Science Fiction"]},
+                     {title:"To Kill a Mockingbird",author:"Harper Lee",year:1960,genres:["Classic","Fiction"]},
+                     {title:"Brave New World",author:"Aldous Huxley",year:2006,genres:["Post-Apocalyptic"]}])
+
+// 7. Insert a new log
+
+db.logs.insertOne({book_id:ObjectId('697e4c85bef3f52e328b10a8'),action:"Book borrowed"})
+
+// 8. Update book "Future" year to 2022
+
+db.books.updateOne({title:"Future"},{$set:{year:2022}})
+
+// 9. Find book with title "Brave New World"
+
+db.books.find({title:"Brave New World"})
+
+// 10. Find books between 1990 and 2010
+
+db.books.find({year:{$gte:1990,$lte:2010}})
+
+// 11. Find books where genre includes Science Fiction
+
+db.books.find({genres:"Science Fiction"})
+
+// 12. Skip 2, limit 3, sort year desc
+
+db.books.find().sort({year:-1}).skip(2).limit(3)
+
+// 13. Find books where year is integer
+
+db.books.find({year:{$type:"int"}})
+
+// 14. Exclude Horror and Science Fiction
+
+db.books.find({genres:{$nin:["Horror","Science Fiction"]}})
+
+// 15. Delete books before 2000
+
+db.books.deleteMany({year:{$lt:2000}})
+
+// 16. Aggregate: books after 2000 sorted desc
+
+db.books.aggregate([{$match:{year:{$gt:2000}}},{$sort:{year:-1}}])
+
+// 17. Aggregate: show title, author, year only
+
+db.books.aggregate([{$match:{year:{$gt:2000}}},{$project:{_id:0,title:1,author:1,year:1}}])
+
+// 18. Unwind genres array
+
+db.books.aggregate([{$unwind:"$genres"}])
+
+// 19. Join books with logs
+
+db.books.aggregate([
+  {
+    $lookup: {
+      from: "logs",
+      localField: "_id",
+      foreignField: "book_id",
+      as: "logs"
+    }
+  }
+])
